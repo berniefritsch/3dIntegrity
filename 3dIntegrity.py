@@ -10,14 +10,19 @@ ms = ml.MeshSet()
 
 # Load 3D model
 # Mesh
-#ms.load_mesh('Mesh_Test.ply')
+ms.load_mesh('Data/FeetMesh.ply')
 
 # Pointcloud
+#ms.load_mesh('Data/FeetPC.ply')
 
 # Broken Mesh
+#ms.load_mesh('Data/FeetBroken.ply')
 
 # OBJ with texture
-ms.load_mesh('Head of Buddha - 5K TRIS.obj')
+#ms.load_mesh('Data/OBJcomplete/Feet.obj')
+
+# OBJ with one missing texture
+#ms.load_mesh('Data/OBJbroken/Feet.obj')
 
 print('Loaded successfully')
 
@@ -36,8 +41,9 @@ print(status)
 # Number of vertices and faces
 num_verts =  ms.current_mesh().vertex_number() 
 num_face =  ms.current_mesh().face_number() 
-print(num_face)
 print(num_verts)
+print(num_face)
+
 
 # Mesh or Pointcloud
 
@@ -65,7 +71,7 @@ print(nmvert)
 # Receipt (Export as PDF)
  
 print('**Receipt:**')
-print('Status:','Loades successfully')
+print('Status:','Loaded successfully')
 print('Number of Meshes:', number)
 print('Number of Faces:', num_face)
 print('Number of Vertices:', num_verts)
