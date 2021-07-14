@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.9
 import pymeshlab as ml
 import os
 import json
@@ -12,7 +13,7 @@ def check_object_for_requirements(data):
 	#data.update({
 	#	"defects": {}
 	#})
-
+	
 	if data["originally"]["Objectformat"] == '.ply':
 		if data["textures"] != None:
 			if data["textures"]["Number of missing textures"] > 0:
@@ -30,12 +31,13 @@ def check_object_for_requirements(data):
 				success = False
 				#data["defects"].update({"missing materials": data["materials"]["Number of missing materials"]})
 			else:
-				if data["materials"]["textures"]["Number of missing textures"] > 0:
-					print('  >>> Error! missing textures.')
-					success	= False
-				if data["materials"]["textures"]["Number of missing TIF textures"] > 0:
-					print('  >>> Error! missing TIF textures.')
-					success = False
+				if data["materials"]["textures"] != None:
+					if data["materials"]["textures"]["Number of missing textures"] > 0:
+						print('  >>> Error! missing textures.')
+						success	= False
+					if data["materials"]["textures"]["Number of missing TIF textures"] > 0:
+						print('  >>> Error! missing TIF textures.')
+						success = False
 	
 	if data["non manifoldness"]["non manifold edges"] == True:
 		print('  >>> Error! non manifold edges.')
@@ -302,20 +304,20 @@ def create_NXS_NXZ(georeference, objecttype, objectname, path, nexus_folder):
 		print('Pointclouds with Georeferences can not converted in a nxs-file.')
 		time.sleep(5)
 		sys.exit(0)
-
+	current_working_directory = os.path.abspath(os.getcwd())
 	object_NXS_path = nexus_folder + '/' + objectname + '.nxs'
 	object_NXZ_path = nexus_folder + '/' + objectname + '.nxz'
-	nxsbuild_cmd    = 'start nexus_converter/nxsbuild ' + path + ' -o ' + object_NXS_path + pointcloud_option + georeference_option
-	nxscompress_cmd = 'start nexus_converter/nxscompress ' + object_NXS_path + ' -o ' + object_NXZ_path
+	nxsbuild_cmd    = current_working_directory+'/nexus_converter/nxsbuild.exe ' + path + ' -o ' + object_NXS_path + pointcloud_option + georeference_option
+	nxscompress_cmd = current_working_directory+'/nexus_converter/nxscompress.exe ' + object_NXS_path + ' -o ' + object_NXZ_path
 
 	if os.path.exists(object_NXS_path)  == False:
 		print('The Object is being converted in a nxs file...')
 		process = subprocess.Popen(nxsbuild_cmd, shell = True)
 		returncode = process.poll()
-		while waiting:
-			if os.path.exists(object_NXS_path):
-				waiting = False
-			time.sleep(1)
+		while returncode == None:
+			returncode = process.poll()
+		#	print (returncode)
+			time.sleep(0.2)
 		print('  >>> Object is sucessfully converted.')
 	else:
 		print('File %s already exists.' % object_NXS_path)
@@ -323,11 +325,11 @@ def create_NXS_NXZ(georeference, objecttype, objectname, path, nexus_folder):
 	if os.path.exists(object_NXZ_path) == False: 
 		waiting = True
 		print('The Object is being converted in a nxz file...')
-		subprocess.Popen(nxscompress_cmd, shell = True)
-		while waiting:
-			if os.path.exists(object_NXZ_path):
-				waiting = False
-			time.sleep(1)
+		process = subprocess.Popen(nxscompress_cmd, shell = True)
+		returncode = process.poll()
+		while returncode == None:
+			returncode = process.poll()
+			time.sleep(0.2)
 		print('  >>> Object is sucessfully converted.')
 	else:
 		print('File %s already exists.' % object_NXZ_path)
@@ -335,7 +337,7 @@ def create_NXS_NXZ(georeference, objecttype, objectname, path, nexus_folder):
 # check_non_manifold_vertices (only for mesh)
 def check_non_manifold_vertices(ms, num_verts):
 	print('The object is being checked by non manifold vertices...')
-	ms.apply_filter('select_non_manifold_vertices')
+	print(ms.apply_filter('select_non_manifold_vertices'))
 	ms.apply_filter('delete_selected_vertices')
 	new_num_verts   =  ms.current_mesh().vertex_number() 
 	non_manifold_vertices = new_num_verts - num_verts
@@ -351,13 +353,13 @@ def check_non_manifold_vertices(ms, num_verts):
 # check_non_manifold_edges (only for mesh)
 def check_non_manifold_edges(ms):
 	print('The object is being checked by non manifold edges...')
-	ms.apply_filter('select_non_manifold_edges_')
+	print (ms.apply_filter('select_non_manifold_edges_'))
 	faces_from_non_manifold_edges = ms.current_mesh().selected_face_number()
 	if faces_from_non_manifold_edges != 0:
-		print('  >>> ERROR!!! This object has non manifold edges.')
+		print('  >>> ERROR!!! This object has non manifold edges from non manifold faces.')
 		return True
 	else:
-		print('  >>> This object hasnt non manifold edges.')
+		print('  >>> This object hasnt non manifold edges and non manifold faces.')
 		return False
 
 # Checking for Georeference
@@ -432,144 +434,154 @@ def create_folder(json_folder, nexus_folder, potree_folder, las_folder, pymeshla
 		print ("Successfully created the directory %s." % pymeshlab_folder)
 
 if __name__ == '__main__':
+	#print (sys.argv)
+	for argv in sys.argv:
+		print (argv)
+		# Name of folders
+		json_folder      = 'jsonData'
+		nexus_folder     = 'nexusData'
+		potree_folder    = 'potreeData'
+		las_folder		 = 'lasData'
+		pymeshlab_folder = 'pymeshlabData'
+		conversion = False
 
-	# Name of folders
-	json_folder      = 'jsonData'
-	nexus_folder     = 'nexusData'
-	potree_folder    = 'potreeData'
-	las_folder		 = 'lasData'
-	pymeshlab_folder = 'pymeshlabData'
-	conversion = False
+		# get console input
+		cmdinput = argv
+		path = cmdinput
+		path = os.path.abspath(path)
+		#print(path)
+		#print(os.path.abspath(__file__))
 
-	# get console input
-	cmdinput = sys.argv[1]
-	path = cmdinput
-	path = os.path.abspath(path)
-	print(path)
-
-	# get name from path
-	basename        			 = os.path.basename(path)
-	directory_path				 = os.path.dirname(path)
-	objectname      			 = os.path.splitext(basename)[0]
-	objectformat				 = os.path.splitext(basename)[1]
-	obformat					 = objectformat.replace(".","_")
-	json_nexus_potree_objectname = objectname + obformat #Warum habe ich mir diesen Namen ausgedacht?
-
-	# get the filesize in byte (/1024 in KB and so on..)
-	objectsize = os.path.getsize(path)
-	print('File Size:', objectsize, 'bytes')
-
-	create_folder(json_folder, nexus_folder, potree_folder, las_folder, pymeshlab_folder)
-	
-	# get format from object (Ascii, binary)
-	codeformat = get_codeformat(objectformat, path)
-	
-	data = {
-		"originally":{
-			"Objectname": objectname,
-			"Objectformat": objectformat,
-			"Codeformat": codeformat,
-			"Objectsize": objectsize
-		}
-	}
-
-	#creating meshset
-	print('The Meshset is being created...')
-	ms = ml.MeshSet()
-	print('  >>> The Meshset is created.')
-	time.sleep(5)
-	# Load 3D model
-	print('The object is being loaded...')
-	if ms.load_new_mesh(path):
-		print('  >>> Error loading object.')
-	else:
-		print('  >>> The Object is successfully loaded.')
-
-	print('The object is being analysed...')
-
-	# vertices, faces and edges from object
-	num_verts    = ms.current_mesh().vertex_number() 
-	num_face     = ms.current_mesh().face_number()
-	num_edge     = ms.current_mesh().edge_number()
-	vert_matrix  = ms.current_mesh().vertex_matrix()
-	face_matrix  = ms.current_mesh().face_matrix()
-	objecttype 	 = get_ObjectType(num_face)
-	georeference = check_Georeference(vert_matrix)
-	
-	data.update({
-		"characteristics": {
-			"Type": objecttype,
-			"Vertices": num_verts,
-			"Faces": num_face,
-			"Edges": num_edge,
-			"Georeferences": georeference
-		}
-	})
-
-	# falls hier festgestellt wird, dass es sich um eine Punktwolke im ply format handelt, wird die Datei in eine las Datei konvertiert, wenn nicht fahre fort
-	if objectformat == '.ply' and objecttype == 'pointcloud':
+		# get name from path
+		basename        			 = os.path.basename(path)
+		directory_path				 = os.path.dirname(path)
+		objectname      			 = os.path.splitext(basename)[0]
+		objectformat				 = os.path.splitext(basename)[1]
+		obformat					 = objectformat.replace(".","_")
+		json_nexus_potree_objectname = objectname + obformat #Warum habe ich mir diesen Namen ausgedacht?
 		
-		if (codeformat == 'ascii') or (codeformat == 'ascii 1.0'):
+		# check fileformat
+		if objectformat != '.ply' and objectformat != '.obj':
+			print('The file has not the right format.')
+			time.sleep(3)
+			#exit()
+		else:
+			# get the filesize in byte (/1024 in KB and so on..)
+			objectsize = os.path.getsize(path)
+			print('File Size:', objectsize, 'bytes')
 
-			path_las_object_file = create_las(path, json_nexus_potree_objectname, las_folder)
+			create_folder(json_folder, nexus_folder, potree_folder, las_folder, pymeshlab_folder)
 			
-			las_objectsize = os.path.getsize(path_las_object_file)
-			print('LAS File Size:', las_objectsize, 'bytes')
+			# get format from object (Ascii, binary)
+			codeformat = get_codeformat(objectformat, path)
 			
-			# aktuelle Info über Objekt + Umwandlung von ply zu las
-			las_name   = os.path.splitext(os.path.basename(path_las_object_file))[0]
-			las_format = os.path.splitext(os.path.basename(path_las_object_file))[1]
+			data = {
+				"originally":{
+					"Objectname": objectname,
+					"Objectformat": objectformat,
+					"Codeformat": codeformat,
+					"Objectsize": objectsize
+				}
+			}
+
+			#creating meshset
+			print('The Meshset is being created...')
+			ms = ml.MeshSet()
+			print('  >>> The Meshset is created.')
+			time.sleep(5)
+			# Load 3D model
+			print('The object is being loaded...')
+			if ms.load_new_mesh(path):
+				print('  >>> Error loading object.')
+			else:
+				print('  >>> The Object is successfully loaded.')
+
+			print('The object is being analysed...')
+
+			# vertices, faces and edges from object
+			num_verts    = ms.current_mesh().vertex_number() 
+			num_face     = ms.current_mesh().face_number()
+			num_edge     = ms.current_mesh().edge_number()
+			vert_matrix  = ms.current_mesh().vertex_matrix()
+			face_matrix  = ms.current_mesh().face_matrix()
+			objecttype 	 = get_ObjectType(num_face)
+			georeference = check_Georeference(vert_matrix)
 			
 			data.update({
-				"LAS Convertion": {
-					"Objectname": las_name,
-					"Objectformat": las_format,
-					"Codeformat": "binary",
-					"Objectsize": las_objectsize
+				"characteristics": {
+					"Type": objecttype,
+					"Vertices": num_verts,
+					"Faces": num_face,
+					"Edges": num_edge,
+					"Georeferences": georeference
 				}
 			})
-			
-			json_nexus_potree_objectname = json_nexus_potree_objectname + '_las'
-			
-			create_PotreeMetadata(path_las_object_file, json_nexus_potree_objectname, potree_folder, data)
-			jsonData_path = json_folder + '/' + json_nexus_potree_objectname + '.json'
-		else:
-			print('  >>> Error! The Object is not in acsii Format.')
-			jsonData_path = json_folder + '/' + json_nexus_potree_objectname + '_Error.json'
-		
-		display_Data(data)
-		create_JsonData(jsonData_path, data)
-	else:
-		
-		non_manifold_edges 	  = check_non_manifold_edges(ms)
-		print('The Object is being reloaded...')
-		ms.load_current_mesh(path)
-		print('  >>> The object is reloaded')
-		non_manifold_vertices = check_non_manifold_vertices(ms, num_verts)
 
-		data.update({
-			"non manifoldness": {
-				"non manifold edges": non_manifold_edges,
-				"non manifold vertices": non_manifold_vertices
-			}
-		})
-		
-		if objectformat == '.ply':
-			data.update(check_ply_for_texture(path, directory_path))
-			
-		if objectformat == '.obj':
-			data.update(check_obj_for_mtl(path, directory_path))
+			# falls hier festgestellt wird, dass es sich um eine Punktwolke im ply format handelt, wird die Datei in eine las Datei konvertiert, wenn nicht fahre fort
+			if objectformat == '.ply' and objecttype == 'pointcloud':
+				
+				if (codeformat == 'ascii') or (codeformat == 'ascii 1.0'):
 
-		display_Data(data)
-		
-		if check_object_for_requirements(data) == False:
-			print('The Object does not meet the requirements.')
-			jsonData_path   = json_folder + '/' + json_nexus_potree_objectname + '_Error.json'
-		else:
-			print('The object meets the requirements.')
-			create_NXS_NXZ(georeference, objecttype, json_nexus_potree_objectname, path, nexus_folder)
-			jsonData_path   = json_folder + '/' + json_nexus_potree_objectname + '.json'
+					path_las_object_file = create_las(path, json_nexus_potree_objectname, las_folder)
+					
+					las_objectsize = os.path.getsize(path_las_object_file)
+					print('LAS File Size:', las_objectsize, 'bytes')
+					
+					# aktuelle Info über Objekt + Umwandlung von ply zu las
+					las_name   = os.path.splitext(os.path.basename(path_las_object_file))[0]
+					las_format = os.path.splitext(os.path.basename(path_las_object_file))[1]
+					
+					data.update({
+						"LAS Convertion": {
+							"Objectname": las_name,
+							"Objectformat": las_format,
+							"Codeformat": "binary",
+							"Objectsize": las_objectsize
+						}
+					})
+					
+					json_nexus_potree_objectname = json_nexus_potree_objectname + '_las'
+					
+					create_PotreeMetadata(path_las_object_file, json_nexus_potree_objectname, potree_folder, data)
+					jsonData_path = json_folder + '/' + json_nexus_potree_objectname + '.json'
+				else:
+					print('  >>> Error! The Object is not in acsii Format.')
+					jsonData_path = json_folder + '/' + json_nexus_potree_objectname + '_Error.json'
+				
+				display_Data(data)
+				create_JsonData(jsonData_path, data)
+			else:
+				
+				non_manifold_edges 	  = check_non_manifold_edges(ms)
+				print('The Object is being reloaded...')
+				ms.load_current_mesh(path)
+				print('  >>> The object is reloaded')
+				non_manifold_vertices = check_non_manifold_vertices(ms, num_verts)
+				
+				data.update({
+					"non manifoldness": {
+						"non manifold edges": non_manifold_edges,
+						"non manifold vertices": non_manifold_vertices
+					}
+				})
+				
+				if objectformat == '.ply':
+					data.update(check_ply_for_texture(path, directory_path))
+					
+				if objectformat == '.obj':
+					data.update(check_obj_for_mtl(path, directory_path))
 
-		create_JsonData(jsonData_path, data)
-		
-	time.sleep(10)
+				display_Data(data)
+				
+				if check_object_for_requirements(data) == False:
+					print('The Object does not meet the requirements.')
+					jsonData_path   = json_folder + '/' + json_nexus_potree_objectname + '_Error.json'
+				else:
+					print('The object meets the requirements.')
+					create_NXS_NXZ(georeference, objecttype, json_nexus_potree_objectname, path, nexus_folder)
+					jsonData_path   = json_folder + '/' + json_nexus_potree_objectname + '.json'
+				
+				create_JsonData(jsonData_path, data)
+				
+		time.sleep(3)
+	time.sleep(10)	
