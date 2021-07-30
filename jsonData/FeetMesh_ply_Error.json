@@ -1,0 +1,20 @@
+{
+    "originally": {
+        "Objectname": "FeetMesh",
+        "Objectformat": ".ply",
+        "Codeformat": "ascii 1.0",
+        "Objectsize": 6011262
+    },
+    "characteristics": {
+        "Type": "mesh",
+        "Vertices": 66668,
+        "Faces": 131954,
+        "Edges": 0,
+        "Georeferences": false
+    },
+    "non manifoldness": {
+        "non manifold edges": true,
+        "non manifold vertices": 1
+    },
+    "textures": null
+}

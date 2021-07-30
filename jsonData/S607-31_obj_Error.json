@@ -1,0 +1,23 @@
+{
+    "originally": {
+        "Objectname": "S607-31",
+        "Objectformat": ".obj",
+        "Codeformat": "ascii",
+        "Objectsize": 141625041
+    },
+    "characteristics": {
+        "Type": "mesh",
+        "Vertices": 473931,
+        "Faces": 1815530,
+        "Edges": 0,
+        "Georeferences": false
+    },
+    "non manifoldness": {
+        "non manifold edges": true,
+        "non manifold vertices": 4
+    },
+    "materials": {
+        "Name/Path": "S607_SerieD_Rampe.mtl",
+        "Found": false
+    }
+}

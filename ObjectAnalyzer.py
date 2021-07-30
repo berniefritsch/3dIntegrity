@@ -6,8 +6,19 @@ import sys
 import time
 import subprocess
 import traceback
+import hashlib
 
-# check_object_for_requirements
+# create a hashcode
+def create_hashcode(path):
+	md5_hash = hashlib.md5()
+	a_file = open(path, "rb")
+	content = a_file.read()
+	md5_hash.update(content)
+	hashcode = md5_hash.hexdigest()
+
+	return hashcode
+
+# check object for requirements
 def check_object_for_requirements(data):
 	success = True
 	#data.update({
@@ -436,7 +447,6 @@ def create_folder(json_folder, nexus_folder, potree_folder, las_folder, pymeshla
 if __name__ == '__main__':
 	#print (sys.argv)
 	for argv in sys.argv:
-		print (argv)
 		# Name of folders
 		json_folder      = 'jsonData'
 		nexus_folder     = 'nexusData'
@@ -446,8 +456,7 @@ if __name__ == '__main__':
 		conversion = False
 
 		# get console input
-		cmdinput = argv
-		path = cmdinput
+		path = argv
 		path = os.path.abspath(path)
 		#print(path)
 		#print(os.path.abspath(__file__))
@@ -460,6 +469,9 @@ if __name__ == '__main__':
 		obformat					 = objectformat.replace(".","_")
 		json_nexus_potree_objectname = objectname + obformat #Warum habe ich mir diesen Namen ausgedacht?
 		
+		# skip first argument
+		if objectname == "ObjectAnalyzer":
+			continue
 		# check fileformat
 		if objectformat != '.ply' and objectformat != '.obj':
 			print('The file has not the right format.')
@@ -480,7 +492,8 @@ if __name__ == '__main__':
 					"Objectname": objectname,
 					"Objectformat": objectformat,
 					"Codeformat": codeformat,
-					"Objectsize": objectsize
+					"Objectsize": objectsize,
+					"hash code": create_hashcode(path)
 				}
 			}
 
@@ -580,7 +593,6 @@ if __name__ == '__main__':
 					print('The object meets the requirements.')
 					create_NXS_NXZ(georeference, objecttype, json_nexus_potree_objectname, path, nexus_folder)
 					jsonData_path   = json_folder + '/' + json_nexus_potree_objectname + '.json'
-				
 				create_JsonData(jsonData_path, data)
 				
 		time.sleep(3)

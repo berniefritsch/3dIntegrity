@@ -1,0 +1,3 @@
+- In Anaconda Powershell Promt öffnen
+- In den Ornder mit dem Skript navigieren
+- Skript ausführen: python ObjectAnalyzer.py ./Folder/Datei.ply
